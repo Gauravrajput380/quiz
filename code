@@ -1,0 +1,145 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class QuizApp extends JFrame implements ActionListener {
+    String[][] questions = {
+        {"What is the capital of France?", "Paris", "London", "Berlin", "Rome", "Paris"},
+        {"Which language runs in a web browser?", "Python", "Java", "C", "JavaScript", "JavaScript"},
+        {"What does CSS stand for?", "Creative Style Sheets", "Cascading Style Sheets", "Computer Style Sheets", "Colorful Style Sheets", "Cascading Style Sheets"}
+    };
+
+    int currentQuestion = 0;
+    int score = 0;
+    Timer timer;
+    int timeLeft = 10;
+
+    JLabel questionLabel = new JLabel();
+    JRadioButton[] options = new JRadioButton[4];
+    ButtonGroup group = new ButtonGroup();
+    JLabel timerLabel = new JLabel("Time left: 10s");
+    JButton nextButton = new JButton("Next");
+
+    JPanel questionPanel = new JPanel();
+    JPanel optionsPanel = new JPanel();
+    JPanel mainPanel = new JPanel();
+    JPanel bottomPanel = new JPanel();
+
+    public QuizApp() {
+        setTitle("Quiz Application with Timer");
+        setSize(500, 350);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center the window
+
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Timer
+        timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(timerLabel);
+
+        // Question
+        questionLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        mainPanel.add(questionLabel);
+
+        // Options
+        optionsPanel.setLayout(new GridLayout(4, 1, 5, 5));
+        for (int i = 0; i < 4; i++) {
+            options[i] = new JRadioButton();
+            group.add(options[i]);
+            optionsPanel.add(options[i]);
+        }
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        mainPanel.add(optionsPanel);
+
+        // Next Button
+        nextButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        nextButton.addActionListener(this);
+        bottomPanel.add(nextButton);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        mainPanel.add(bottomPanel);
+
+        add(mainPanel);
+        showQuestion();
+        startTimer();
+
+        setVisible(true);
+    }
+
+    public void startTimer() {
+        timeLeft = 10;
+        timerLabel.setText("Time left: 10s");
+
+        timer = new Timer(1000, e -> {
+            timeLeft--;
+            timerLabel.setText("Time left: " + timeLeft + "s");
+            if (timeLeft == 0) {
+                timer.stop();
+                autoNextQuestion();
+            }
+        });
+        timer.start();
+    }
+
+    public void showQuestion() {
+        group.clearSelection();
+        String[] q = questions[currentQuestion];
+        questionLabel.setText("Q" + (currentQuestion + 1) + ": " + q[0]);
+        for (int i = 0; i < 4; i++) {
+            options[i].setText(q[i + 1]);
+        }
+    }
+
+    public void autoNextQuestion() {
+        checkAnswer(null); // No answer selected
+        moveToNextQuestion();
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        timer.stop();
+        String selected = null;
+        for (JRadioButton opt : options) {
+            if (opt.isSelected()) {
+                selected = opt.getText();
+                break;
+            }
+        }
+        checkAnswer(selected);
+        moveToNextQuestion();
+    }
+
+    public void checkAnswer(String answer) {
+        String correct = questions[currentQuestion][5];
+        if (correct.equals(answer)) {
+            score++;
+        }
+    }
+
+    public void moveToNextQuestion() {
+        currentQuestion++;
+        if (currentQuestion < questions.length) {
+            showQuestion();
+            startTimer();
+        } else {
+            showResult();
+        }
+    }
+
+    public void showResult() {
+        getContentPane().removeAll();
+        repaint();
+
+        JLabel resultLabel = new JLabel("You scored: " + score + " out of " + questions.length);
+        resultLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        resultLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(resultLabel, BorderLayout.CENTER);
+
+        revalidate();
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new QuizApp());
+    }
+}
